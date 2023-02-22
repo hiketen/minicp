@@ -120,7 +120,8 @@ public class GraphColoringTinyCSP {
         // TODO: solve the graph coloring problem using TinyCSP and return a solution
         // Hint: you can stop the search on first solution throwing and catching an exception
         //       in the onSolution closure or you can modify the dfs search
-         throw new NotImplementedException("GraphColoringTinyCSP");
+      //throw new NotImplementedException("GraphColoringTinyCSP");
+      return new int[3];
     }
 
 
