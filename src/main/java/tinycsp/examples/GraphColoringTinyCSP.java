@@ -57,6 +57,7 @@ public class GraphColoringTinyCSP {
         String path = "data/graph_coloring/gc_15_30_9";
         GraphColoringInstance instance = readInstance(path);
         int [] solution= solve(instance);
+
         writeSol(path+".sol",solution,instance.maxColor);
     }
 
@@ -120,8 +121,34 @@ public class GraphColoringTinyCSP {
         // TODO: solve the graph coloring problem using TinyCSP and return a solution
         // Hint: you can stop the search on first solution throwing and catching an exception
         //       in the onSolution closure or you can modify the dfs search
-      //throw new NotImplementedException("GraphColoringTinyCSP");
-      return new int[3];
+        //throw new NotImplementedException("GraphColoringTinyCSP");
+
+        TinyCSP csp = new TinyCSP();
+        Variable[] c = new Variable[instance.n]; // c[i] represents color node #i
+
+        for (int i = 0; i < instance.n; i++) {
+            c[i] = csp.makeVariable(instance.maxColor);
+        }
+
+        for (int [] e: instance.edges) {
+            csp.notEqual(c[e[0]], c[e[1]], 0); 
+        }
+        
+        //int [] solutionFound = new int[instance.n];
+        ArrayList<int []> solutions = new ArrayList<>();
+        try {
+        
+            csp.dfs(solution -> {
+		//System.out.println("Found the solution (in lambda)");
+                solutions.add(solution);
+                throw new NotImplementedException("GraphColoringTinyCSP");
+            });
+        } catch (NotImplementedException e) {
+	    //System.out.println("Found the solution (in catch)");
+            return solutions.get(0);
+        }
+
+        return new int[instance.n];
     }
 
 
