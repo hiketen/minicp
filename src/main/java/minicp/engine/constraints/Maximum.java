@@ -47,15 +47,64 @@ public class Maximum extends AbstractConstraint {
         // TODO
         //  - call the constraint on all bound changes for the variables (x.propagateOnBoundChange(this))
         //  - call a first time the propagate() method to trigger the propagation
-         throw new NotImplementedException("Maximum");
+      for (int i=0; i < x.length; i++)
+        x[i].propagateOnBoundChange(this);
+      y.propagateOnBoundChange(this);
+      propagate();
     }
 
 
     @Override
     public void propagate() {
-        // TODO
-        //  - update the min and max values of each x[i] based on the bounds of y
-        //  - update the min and max values of each y based on the bounds of all x[i]
-         throw new NotImplementedException("Maximum");
+      int found;
+
+      //System.out.printf("\n@sp:");
+      //for (int i=0; i < x.length; i++) 
+      //  System.out.printf(" x[%d]: %d..%d;", i, x[i].min(), x[i].max());
+      //System.out.printf(" y: %d..%d;\n", y.min(), y.max());
+
+      //  - update the min and max values of each x[i] based on the bounds of y
+      //  - update the min and max values of each y based on the bounds of all x[i]
+      int xMaxMin = x[0].min();
+      int xMaxMax = x[0].max();
+      for (int i=0; i < x.length; i++) {
+        //System.out.printf("processing i=%d\n", i);
+        if (x[i].max() > y.max())
+          x[i].removeAbove(y.max());
+        if (x[i].max() > xMaxMax)
+          xMaxMax = x[i].max();
+        if (x[i].min() > xMaxMin)
+          xMaxMin = x[i].min();
+      }
+
+      //System.out.printf("xMaxMin=%d; xMaxMax=%d\n", xMaxMin, xMaxMax);
+      if (y.max() > xMaxMax)
+        y.removeAbove(xMaxMax);
+
+      if (y.min() < xMaxMin)
+        y.removeBelow(xMaxMin);
+      else if (y.min() > xMaxMin)  {
+        // if there is only one x whose max is greater than ymin,
+	// then it can only be the chosen one and it's lower range should be removed. 
+        found = -1; // > 0 if one index found; -2 if more than one indices are found
+        for (int i=0; i < x.length; i++) {
+          if (x[i].max() > y.min()) {
+	    if (found == -1)
+	      found = i;
+	    else {
+	      found = -2;
+	      break;
+	    }
+          }
+        }
+	if (found >= 0)
+	  x[found].removeBelow(y.min());
+      }
+      
+      //System.out.printf("@ep:");
+      //for (int i=0; i < x.length; i++) 
+      //  System.out.printf(" x[%d]: %d..%d;", i, x[i].min(), x[i].max());
+      //System.out.printf(" y: %d..%d;\n\n", y.min(), y.max());
+
     }
 }
