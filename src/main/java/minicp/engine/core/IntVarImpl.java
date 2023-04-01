@@ -22,6 +22,7 @@ import minicp.util.exception.NotImplementedException;
 
 import java.security.InvalidParameterException;
 import java.util.Set;
+import java.util.Arrays;
 
 /**
  * Implementation of a variable
@@ -100,7 +101,40 @@ public class IntVarImpl implements IntVar {
      * @param values the initial values in the domain, it must be nonempty
      */
     public IntVarImpl(Solver cp, Set<Integer> values) {
-         throw new NotImplementedException();
+      int n = values.size();
+      Integer valuesArray[] = new Integer[n];
+      int min = Integer.MAX_VALUE;
+      int max = Integer.MIN_VALUE;
+      int idx=0;
+      for (Integer a: values) {
+	//System.out.printf("a:%d\n", a);
+	valuesArray[idx++] = a;
+	if (a < min)
+	  min = a;
+	if (a > max)
+	  max = a;
+      }
+      //System.out.printf("min:%d\n", min);
+      //System.out.printf("max:%d\n", max);
+      this.cp = cp;
+      domain = new SparseSetDomain(cp.getStateManager(), min, max);
+      onDomain = new StateStack<>(cp.getStateManager());
+      onFix = new StateStack<>(cp.getStateManager());
+      onBound = new StateStack<>(cp.getStateManager());
+
+      Arrays.sort(valuesArray);
+      Integer expectedNextValue = min+1;
+      for (idx=1; idx < n; idx++) {
+	//System.out.printf("processing %d\n", valuesArray[idx] );
+	if (valuesArray[idx] != expectedNextValue) {
+	  while (expectedNextValue != valuesArray[idx]) {
+	    this.remove(expectedNextValue);
+	    //System.out.printf("removed %d\n", expectedNextValue);
+	    expectedNextValue += 1;
+	  }
+	}
+	expectedNextValue += 1;
+      }
     }
 
     @Override
