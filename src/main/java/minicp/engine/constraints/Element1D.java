@@ -73,11 +73,33 @@ public class Element1D extends AbstractConstraint {
 
     @Override
     public void post() {
-         throw new NotImplementedException("Element1D");
+      y.removeBelow(0);
+      y.removeAbove(t.length - 1);
+      y.propagateOnDomainChange(this);
+      z.propagateOnDomainChange(this);
+      propagate();
     }
+
 
     @Override
     public void propagate() {
-         throw new NotImplementedException("Element1D");
+
+      for (int i = y.min(); i <= y.max(); i++)
+        if (y.contains(i) && !z.contains(t[i]))
+          y.remove(i);
+
+      Integer [] zSup = new Integer[z.max() - z.min() + 1];
+      Integer zOff = z.min();
+      for (int v = z.min(); v <= z.max(); v++)
+        zSup[v-zOff] = 0;
+
+      for (int i = y.min(); i <= y.max(); i++)
+        if (y.contains(i)) 
+	  zSup[t[i]-zOff] += 1;
+	  
+      for (int v = z.min(); v <= z.max(); v++)
+        if (z.contains(v) && (zSup[v-zOff]==0))
+	  z.remove(v);
+
     }
 }
