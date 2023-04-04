@@ -76,7 +76,7 @@ public class Element1D extends AbstractConstraint {
       y.removeBelow(0);
       y.removeAbove(t.length - 1);
       y.propagateOnDomainChange(this);
-      z.propagateOnDomainChange(this);
+      z.propagateOnBoundChange(this);
       propagate();
     }
 
@@ -85,8 +85,9 @@ public class Element1D extends AbstractConstraint {
     public void propagate() {
 
       for (int i = y.min(); i <= y.max(); i++)
-        if (y.contains(i) && !z.contains(t[i]))
+        if (y.contains(i) && ((t[i] < z.min()) || (t[i] > z.max())))
           y.remove(i);
+
 
       Integer [] zSup = new Integer[z.max() - z.min() + 1];
       Integer zOff = z.min();
@@ -97,9 +98,14 @@ public class Element1D extends AbstractConstraint {
         if (y.contains(i)) 
 	  zSup[t[i]-zOff] += 1;
 	  
-      for (int v = z.min(); v <= z.max(); v++)
-        if (z.contains(v) && (zSup[v-zOff]==0))
-	  z.remove(v);
+      // update z.min
+      if (zSup[z.min()-zOff] == 0)
+	z.remove(z.min());
+
+      // update z.max
+      if (zSup[z.max()-zOff] == 0)
+	z.remove(z.max());
+
 
     }
 }
