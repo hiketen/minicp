@@ -33,23 +33,44 @@ import java.util.stream.IntStream;
 public class AllDifferentFWC extends AbstractConstraint {
 
     private IntVar[] x;
-
+    private int[] fixed;
+    private StateInt nFixed;
     
 
     public AllDifferentFWC(IntVar... x) {
         super(x[0].getSolver());
         this.x = x;
+        fixed = IntStream.range(0, x.length).toArray();
+        nFixed = getSolver().getStateManager().makeStateInt(0);
         
     }
 
     @Override
     public void post() {
-         throw new NotImplementedException("AllDifferentFWC");
+      for (int i = 0; i < x.length; i++) {
+        x[i].propagateOnFix(this);
+      }
     }
 
     @Override
     public void propagate() {
-        // TODO use the sparse-set trick as seen in Sum.java
-         throw new NotImplementedException("AllDifferentFWC");
+      // TODO use the sparse-set trick as seen in Sum.java
+      int nF = nFixed.value();
+      for (int i = nF; i < x.length; i++) {
+        int idx = fixed[i];
+        if (x[idx].isFixed()) {
+
+          // swap the variables
+          fixed[i] = fixed[nF];
+          fixed[nF] = idx;
+          nF++;
+
+          // filter the unfixed variables
+          for (int j = nF; j < x.length; j++) {
+            x[fixed[j]].remove(x[idx].min());
+          }
+        }
+      }
+      nFixed.setValue(nF);
     }
 }
