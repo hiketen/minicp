@@ -111,8 +111,64 @@ public class AllDifferentDC extends AbstractConstraint {
             in[j].clear();
             out[j].clear();
         }
-        // TODO continue the implementation for representing the residual graph
-         throw new NotImplementedException("AllDifferentDC");
+
+        // debug------------------------
+	//boolean DBG = true;
+	boolean DBG = false;
+	if (DBG) {
+	  System.out.printf("nVar:%d, nNodes:%d, minVal:%d, maxVal:%d\n", nVar, nNodes, minVal, maxVal);
+	  System.out.printf("match:");
+	  for (int i = 0; i < nVar; i++) {
+	    System.out.printf(" [%d]:%d;", i, match[i]);
+	  }
+	  System.out.printf("\n");
+	}
+
+        // continue the implementation for representing the residual graph
+        for (int i = 0; i < nVar; i++) {
+	  if (match[i] != MaximumMatching.NONE){
+            int valNodeIdx = nVar + match[i] - minVal;
+	    in[i].add(valNodeIdx);
+	    out[valNodeIdx].add(i);
+
+	    matched[match[i]-minVal] = true;
+
+	    out[sink].add(valNodeIdx);
+	    in[valNodeIdx].add(sink);
+
+	  }
+	}
+        for (int i = nVar; i < nNodes-1; i++) {
+	  if (!matched[i-nVar]) {
+	    in[sink].add(i);
+	    out[i].add(sink);
+	  }
+	}
+
+        for (int i = 0; i < nVar; i++) {
+	  for (int v = x[i].min(); v <= x[i].max(); v++) { // TODO-SK: replace with fillarray
+	    if (x[i].contains(v)) {
+	      if (match[i] != v) {
+		in[nVar + v - minVal].add(i);
+		out[i].add(nVar + v - minVal);
+	      } 
+	    }
+	  }
+	}
+
+	// debug
+	/*
+        for (int i = nVar; i < nNodes-1; i++) {
+	  System.out.printf("in[%d](val=%d):  ", i, minVal+i-nVar);
+	  for (Integer varIdx: in[i])  {
+	    System.out.printf(" %d", varIdx);
+	  }
+	  System.out.printf("\n");
+	}
+	*/
+
+
+	
     }
 
 
@@ -123,6 +179,54 @@ public class AllDifferentDC extends AbstractConstraint {
         //       use updateRange() to update the range of values
         //       use updateGraph() to update the residual graph
         //       use  GraphUtil.stronglyConnectedComponents to compute SCC's
-         throw new NotImplementedException("AllDifferentDC");
+        maximumMatching.compute(match);
+        updateRange();
+        updateGraph();
+	int[] sccIdx;
+	sccIdx = GraphUtil.stronglyConnectedComponents(g);
+
+        // debug------------------------
+	//boolean DBG = true;
+	boolean DBG = false;
+	if (DBG) {
+	  System.out.printf("nNodes:%d\n", nNodes);
+
+	  System.out.printf("matched:", nNodes);
+	  for (int i = 0; i < nVal; i++) {
+	    System.out.printf(" [%d]:%s;", i+minVal, matched[i]);
+	  }
+	  System.out.printf("\n");
+
+	  System.out.printf("sccIdx:", nNodes);
+	  for (int i = 0; i < nNodes; i++) {
+	    System.out.printf(" [%d]:%d;", i, sccIdx[i]);
+	  }
+	  System.out.printf("\n");
+
+	}
+
+        // Remove the non-matching edges that are between SCCs
+	for (int i = nVar; i < nNodes-1; i++) {
+	  //System.out.printf("Processing value node %d(%d) \n", i, i-nVar+minVal);
+	  for (Integer varIdx: in[i])  {
+	    if (varIdx == nNodes-1)
+	      continue;
+	    //System.out.printf("  Processing edge from %d to %d(%d) \n", varIdx, i, i-nVar+minVal);
+	    if (sccIdx[varIdx] != sccIdx[i]) {
+	      //System.out.printf("   Removing value %d from x[%d] domain \n", i-nVar+minVal, i);
+	      x[varIdx].remove(i-nVar+minVal);
+	      //System.out.printf("   Removing edge \n");
+	      //in[i].remove(varIdx);
+	      //System.out.printf("    out[%d]", varIdx);
+	      //for (Integer valIdx: out[varIdx])  
+		//System.out.printf(" %d", valIdx);
+	      //System.out.printf("\n");
+	      //System.out.printf("Removing %d from out[%d]\n", i, varIdx);
+	      //out[varIdx].remove(Integer.valueOf(i));
+	      //System.out.printf("Removing one\n");
+	    }
+	  }
+	}
+	
     }
 }
